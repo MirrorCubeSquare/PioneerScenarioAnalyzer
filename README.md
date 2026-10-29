@@ -60,7 +60,7 @@ dotnet build .\PioneerScenarioAnalyzer\PioneerScenarioAnalyzer.csproj -c Release
 dotnet run --project .\tests\PioneerScenarioAnalyzerSmoke -p:UraTestHostRoot=K:\repos\UmamusumeResponseAnalyzer -p:GenerateUraPluginManifestOnBuild=false -p:PackageUraPluginOnBuild=false -p:DeployUraPluginToLocalAppDataOnBuild=false
 ```
 
-覆盖端点分发、独立加载、训练数值、Display 组合、面板布局与颜色、窗口缩放、滚动与 history。EventLogger 联动由 Host 的 `PluginRuntimeSmoke` 使用双方实际注册的请求和响应处理器验证。
+覆盖端点分发、独立加载、训练数值、Display 组合、面板布局与颜色、窗口缩放、滚动与 history。EventLogger 联动由 Host 的 `PioneerEventLoggerSmoke` 使用双方实际注册的请求和响应处理器验证。
 
 共用 workflow 从已解析 Host NuGet 包的源码提交构建测试 Host；该提交需要包含 `PioneerScenarioAnalyzerSmoke` 的 `InternalsVisibleTo` 声明。发布顺序为包含此测试声明的 Host 包、Pioneer 插件。
 
