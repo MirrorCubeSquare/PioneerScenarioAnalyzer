@@ -181,7 +181,7 @@
     <value>红</value>
   </data>
   <data name="I18N_RepeatTurn" xml:space="preserve">
-    <value>[yellow]******此回合为重复显示******[/]</value>
+    <value>******此回合为重复显示******</value>
   </data>
   <data name="I18N_Sashi" xml:space="preserve">
     <value>差</value>
@@ -223,7 +223,7 @@
     <value>智</value>
   </data>
   <data name="I18N_WrongTurnAlert" xml:space="preserve">
-    <value>[red]警告：回合数不正确，上一个回合为{0}，当前回合为{1}[/]</value>
+    <value>警告：回合数不正确，上一个回合为{0}，当前回合为{1}</value>
   </data>
   <data name="I18N_Year" xml:space="preserve">
     <value>年</value>

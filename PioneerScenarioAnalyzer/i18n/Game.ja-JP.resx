@@ -181,7 +181,7 @@
     <value>赤</value>
   </data>
   <data name="I18N_RepeatTurn" xml:space="preserve">
-    <value>[yellow]このターンは重複して表示されます[/]</value>
+    <value>このターンは重複して表示されます</value>
   </data>
   <data name="I18N_Sashi" xml:space="preserve">
     <value>差</value>
@@ -223,7 +223,7 @@
     <value>賢</value>
   </data>
   <data name="I18N_WrongTurnAlert" xml:space="preserve">
-    <value>[red]警告：ターン数が正しくありません。前のターンは{0}、現在のターンは{1}です[/]</value>
+    <value>警告：ターン数が正しくありません。前のターンは{0}、現在のターンは{1}です</value>
   </data>
   <data name="I18N_Year" xml:space="preserve">
     <value>年</value>

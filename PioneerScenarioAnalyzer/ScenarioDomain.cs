@@ -4,6 +4,16 @@ using UmamusumeResponseAnalyzer;
 
 namespace PioneerScenarioAnalyzer;
 
+public sealed record PioneerScenarioResponseData(
+    SingleModeChara CharaInfo,
+    SingleModeHomeInfo HomeInfo,
+    SingleModePioneerDataSet DataSet,
+    SingleModeEventInfo[]? UncheckedEvents,
+    SingleModeSelectIndexInfo[]? SelectIndices,
+    SingleRaceStartInfo? RaceStartInfo);
+
+internal sealed record PioneerTrainingStats(int[] FiveValueGain, int PtGain, int VitalGain, int FailureRate);
+
 internal sealed class SingleModeTurnData(
     SingleModeChara charaInfo,
     SingleModeHomeInfo homeInfo,
@@ -13,8 +23,8 @@ internal sealed class SingleModeTurnData(
     public SingleModeHomeInfo home_info { get; } = homeInfo;
     public SingleModePioneerDataSet pioneer_data_set { get; } = pioneerDataSet;
 
-    public static SingleModeTurnData From(SingleModePioneerCheckEventResponse.CommonResponse response)
-        => new(response.chara_info, response.home_info, response.pioneer_data_set);
+    public static SingleModeTurnData From(PioneerScenarioResponseData response)
+        => new(response.CharaInfo, response.HomeInfo, response.DataSet);
 }
 
 internal class TurnInfo(SingleModeTurnData resp)
@@ -46,12 +56,12 @@ internal class TurnInfo(SingleModeTurnData resp)
     public string HalfMonth => Turn % 2 == 0 ? "后半" : "前半";
     public SingleModeTurnData GetCommonResponse() => resp;
 
-    static int ReviseOver1200(int value) => value > 1200 ? value * 2 - 1200 : value;
+    internal static int ReviseOver1200(int value) => value > 1200 ? value * 2 - 1200 : value;
 }
 
 internal sealed class TurnInfoPioneer(SingleModeTurnData resp) : TurnInfo(resp)
 {
-    public static readonly int[] TrainIds = [101, 105, 102, 103, 106, 3601, 3602, 3603, 3604, 3605];
+    public static readonly int[] TrainIds = [101, 105, 102, 103, 106];
     public static readonly FrozenDictionary<int, int> ToTrainId = new Dictionary<int, int>
     {
         [101] = 101, [105] = 105, [102] = 102, [103] = 103, [106] = 106,
@@ -62,16 +72,11 @@ internal sealed class TurnInfoPioneer(SingleModeTurnData resp) : TurnInfo(resp)
         [101] = 0, [105] = 1, [102] = 2, [103] = 3, [106] = 4,
         [3601] = 0, [3602] = 1, [3603] = 2, [3604] = 3, [3605] = 4
     }.ToFrozenDictionary();
-    public static readonly FrozenDictionary<int, int> XiahesuIds = new Dictionary<int, int>
-    {
-        [101] = 3601, [105] = 3602, [102] = 3603, [103] = 3604, [106] = 3605
-    }.ToFrozenDictionary();
-
     public List<CommandInfo> CommandInfoArray { get; } =
     [
-        .. resp.pioneer_data_set.command_info_array
-            .Where(command => command.command_id != 3101)
-            .Select(command => new CommandInfo(resp, null, command.command_id, ToTrainIndex, ToTrainId))
+        .. TrainIds.Select(trainId => new CommandInfo(resp,
+            resp.pioneer_data_set.command_info_array.Single(command =>
+                ToTrainId.TryGetValue(command.command_id, out var id) && id == trainId).command_id))
     ];
 
     public Dictionary<int, int> PointGainInfoDictionary { get; } =
@@ -80,29 +85,23 @@ internal sealed class TurnInfoPioneer(SingleModeTurnData resp) : TurnInfo(resp)
 
 internal sealed class CommandInfo
 {
-    static readonly FrozenDictionary<int, int> ToTrainIndexDefault = new Dictionary<int, int>
-    {
-        [101] = 0, [105] = 1, [102] = 2, [103] = 3, [106] = 4,
-        [3601] = 0, [3602] = 1, [3603] = 2, [3604] = 3, [3605] = 4
-    }.ToFrozenDictionary();
-
     public int CommandId { get; }
-    public int TrainIndex { get; set; }
+    public int TrainIndex { get; }
     public int TrainLevel { get; }
     public IEnumerable<TrainingPartner> TrainingPartners { get; }
 
-    public CommandInfo(SingleModeTurnData resp, TurnInfo? turn, int commandId, IDictionary<int, int>? trainIndexDictionary = null, IDictionary<int, int>? toTrainIdDictionary = null)
+    public CommandInfo(SingleModeTurnData resp, int commandId)
     {
-        turn ??= new TurnInfo(resp);
+        var turn = new TurnInfo(resp);
         CommandId = commandId;
-        if ((trainIndexDictionary ?? ToTrainIndexDefault).TryGetValue(commandId, out var trainIndex))
-            TrainIndex = trainIndex + 1;
-        var training = resp.chara_info.training_level_info_array.FirstOrDefault(x => x.command_id == CommandId);
-        TrainLevel = training != default ? training.level : 0;
-        var normalCommand = resp.home_info.command_info_array.FirstOrDefault(x => x.command_id == CommandId)
-            ?? resp.home_info.command_info_array.First(x => (toTrainIdDictionary ?? TurnInfoPioneer.ToTrainId).TryGetValue(CommandId, out var trainId) && x.command_id == trainId);
+        TrainIndex = TurnInfoPioneer.ToTrainIndex[commandId] + 1;
+        var trainId = TurnInfoPioneer.ToTrainId[commandId];
+        TrainLevel = resp.chara_info.training_level_info_array.First(x =>
+            TurnInfoPioneer.ToTrainId.TryGetValue(x.command_id, out var id) && id == trainId).level;
+        var normalCommand = resp.home_info.command_info_array.First(x =>
+            TurnInfoPioneer.ToTrainId.TryGetValue(x.command_id, out var id) && id == trainId);
         TrainingPartners = normalCommand.training_partner_array
-            .Select(x => new TrainingPartner(turn, x, normalCommand, toTrainIdDictionary))
+            .Select(x => new TrainingPartner(turn, x, normalCommand))
             .OrderBy(x => x.Priority)
             .ToArray();
     }
@@ -123,15 +122,18 @@ internal sealed class TrainingPartner
     public PartnerPriority Priority { get; private set; } = PartnerPriority.默认;
     public int Position { get; }
     public int CardId { get; }
-    public string Name { get; }
+    public PioneerDisplayLine DisplayLine { get; }
     public int Friendship { get; }
     public bool IsNpc => Position is not (>= 1 and <= 6);
     public bool Shining { get; private set; }
 
-    public TrainingPartner(TurnInfo turn, int partner, SingleModeCommandInfo command, IDictionary<int, int>? toTrainIdDictionary = null)
+    public TrainingPartner(TurnInfo turn, int partner, SingleModeCommandInfo command)
     {
         Position = partner;
         Friendship = turn.Evaluations.TryGetValue(Position, out var evaluation) ? evaluation.evaluation : 0;
+        var segments = new List<PioneerDisplaySegment>();
+        if (command.tips_event_partner_array.Contains(Position))
+            segments.Add(new("!", PioneerDisplayColor.Red));
 
         if (!IsNpc)
         {
@@ -147,23 +149,29 @@ internal sealed class TrainingPartner
                 Priority = PartnerPriority.羁绊不足;
             }
 
-            var trainId = (toTrainIdDictionary ?? TurnInfoPioneer.ToTrainId)[command.command_id];
+            var trainId = TurnInfoPioneer.ToTrainId[command.command_id];
             Shining = Friendship >= 80 && supportCard.Type == trainId;
 
             if (Shining)
                 Priority = supportCard.IsFriendCard ? PartnerPriority.友人 : PartnerPriority.闪;
 
-            var append = Friendship < 100 ? $" {Friendship}" : string.Empty;
-            Name = $"{(Shining ? "★" : string.Empty)}{name}{append}";
+            segments.Add(new($"{(Shining ? "★" : string.Empty)}{name}", Priority switch
+            {
+                PartnerPriority.友人 => PioneerDisplayColor.Green,
+                PartnerPriority.闪 => PioneerDisplayColor.Aqua,
+                PartnerPriority.羁绊不足 => PioneerDisplayColor.Yellow,
+                _ => PioneerDisplayColor.Normal
+            }));
         }
         else
         {
             Priority = Position is >= 100 and < 1000 ? PartnerPriority.关键NPC : PartnerPriority.默认;
-            Name = Database.Names.DisplayNickname(Position);
+            segments.Add(new(Database.Names.DisplayNickname(Position),
+                Priority == PartnerPriority.关键NPC ? PioneerDisplayColor.Teal : PioneerDisplayColor.Normal));
         }
 
-        var tips = command.tips_event_partner_array.Intersect(command.training_partner_array);
-        if (tips.Contains(Position))
-            Name = $"!{Name}";
+        if ((Position is >= 1 and <= 7 or >= 100 and < 1000) && Friendship < 100)
+            segments.Add(new($" {Friendship}", PioneerDisplayColor.Red));
+        DisplayLine = new(segments);
     }
 }

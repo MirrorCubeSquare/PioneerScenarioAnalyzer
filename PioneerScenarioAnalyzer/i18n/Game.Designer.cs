@@ -250,7 +250,7 @@ namespace PioneerScenarioAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [yellow]This turn is a duplicate display[/] 的本地化字符串。
+        ///   查找类似 This turn is a duplicate display 的本地化字符串。
         /// </summary>
         internal static string I18N_RepeatTurn {
             get {
@@ -376,7 +376,7 @@ namespace PioneerScenarioAnalyzer.i18n {
         }
         
         /// <summary>
-        ///   查找类似 [red]Warning: Incorrect turn, the previous turn was {0}, the current turn is {1}[/] 的本地化字符串。
+        ///   查找类似 Warning: Incorrect turn, the previous turn was {0}, the current turn is {1} 的本地化字符串。
         /// </summary>
         internal static string I18N_WrongTurnAlert {
             get {
