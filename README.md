@@ -6,7 +6,7 @@
 
 解析覆盖 `single_mode_pioneer` 的 `load`、`check_event`、`continue`、`exec_command`、`gain_skills`、`pioneer_live`、`planning`、`race_end`、`race_entry`、`race_out` 和 `shima_training_exec`。响应处于训练状态、没有待处理事件或比赛，且包含完整的五项基础训练及剧本训练数据时才更新面板。
 
-`EventLoggerPlugin` 是可选联动：安装时记录训练统计并显示事件统计 Extras；缺失时独立显示训练分析。
+`EventLoggerPlugin` 通过 Display producer 注入连续事件、训练失败、事件数、继承属性与技能点、胜场统计。Pioneer 独立解析和显示训练，不引用 EventLogger。
 
 History 以 `(single_mode_chara_id, turn)` 为键；同键输出原位更新，不会因其它插件修改分析结果而新增记录。History 内容不跨进程保存。
 
@@ -42,14 +42,13 @@ producer.Update(id, (_, display) =>
 PioneerTrainingDisplay.Show(id, switchToWorkspace: false);
 ```
 
-`Update` 只替换该 producer 在指定 ID 下的内容；`Show` 按注册顺序组合并发布。同一 ID 原位更新，不增加 history 或未读。`Important`、`Scenario`、`Extra` 支持追加文本，`Training` 支持按训练种类或 command ID 修改标题、追加文本和标记。Extra 按 producer 来源标题分组。
+`Update` 只替换该 producer 在指定 ID 下的内容；`Show` 按注册顺序组合并发布。同一 ID 原位更新，不增加 history 或未读。`Important`、`Scenario`、`Extra` 支持 `AddText` 和 `AddStyled(PioneerDisplaySegment[])`，`Training` 支持按训练种类或 command ID 修改标题、追加文本和标记。Extra 按 producer 来源标题分组。
 
 注册、Update 和 Dispose 不自动发布；ID 尚无场景输出或操作已取消时，`Show` 返回 `false`。producer 抛出异常时保留最后一次成功显示。history 淘汰时释放对应 ID，插件释放时清空自身显示数据。
 
 ## 构建
 
 ```powershell
-git -c core.longpaths=true submodule update --init --recursive
 dotnet build .\PioneerScenarioAnalyzer\PioneerScenarioAnalyzer.csproj -c Release -m:1 -p:RuntimeIdentifier=win-x64 -p:SelfContained=false -p:PlatformTarget=AnyCPU -p:DeployUraPluginToLocalAppDataOnBuild=false
 ```
 
@@ -61,7 +60,7 @@ dotnet build .\PioneerScenarioAnalyzer\PioneerScenarioAnalyzer.csproj -c Release
 dotnet run --project .\tests\PioneerScenarioAnalyzerSmoke -p:UraTestHostRoot=K:\repos\UmamusumeResponseAnalyzer -p:GenerateUraPluginManifestOnBuild=false -p:PackageUraPluginOnBuild=false -p:DeployUraPluginToLocalAppDataOnBuild=false
 ```
 
-覆盖端点分发、独立加载、EventLogger 联动、训练数值、Display 组合、面板布局与颜色、窗口缩放、滚动与 history。
+覆盖端点分发、独立加载、训练数值、Display 组合、面板布局与颜色、窗口缩放、滚动与 history。EventLogger 联动由 Host 的 `PluginRuntimeSmoke` 使用双方实际注册的请求和响应处理器验证。
 
 共用 workflow 从已解析 Host NuGet 包的源码提交构建测试 Host；该提交需要包含 `PioneerScenarioAnalyzerSmoke` 的 `InternalsVisibleTo` 声明。发布顺序为包含此测试声明的 Host 包、Pioneer 插件。
 

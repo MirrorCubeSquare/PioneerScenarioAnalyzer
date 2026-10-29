@@ -13,14 +13,10 @@
     <PluginAuthor>离披</PluginAuthor>
     <PluginDescription>解析野人杯回合信息</PluginDescription>
     <PluginRepositoryUrl>https://github.com/URA-Plugins/PioneerScenarioAnalyzer</PluginRepositoryUrl>
-    <PluginDependencies>EventLoggerPlugin</PluginDependencies>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="PioneerScenarioAnalyzerSmoke" />
-    <ProjectReference Include="..\deps\EventLoggerPlugin\EventLoggerPlugin.csproj">
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

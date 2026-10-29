@@ -29,8 +29,7 @@ Run("command IDs, summer training and island totals", TestTraining);
 Run("original dashboard layout, colors and scrolling", TestOriginalDashboard);
 Run("display producer composition", TestProducers);
 Run("keyed history and configuration", TestHistory);
-Run("EventLogger integration", TestEventLogger);
-Console.WriteLine("PioneerScenarioAnalyzer smoke passed (7 phases).");
+Console.WriteLine("PioneerScenarioAnalyzer smoke passed (6 phases).");
 
 void Run(string name, Action test)
 {
@@ -246,13 +245,16 @@ void TestProducers()
                 training.Title = "custom speed";
                 training.AddText("training marker");
             });
-            display.Extra.AddText("first marker");
+            var segments = new[] { new PioneerDisplaySegment("first marker", PioneerDisplayColor.Yellow) };
+            display.Extra.AddStyled(segments);
+            segments[0] = new("mutated marker");
         });
         second.Update(id, (_, display) => display.Extra.AddText("second marker"));
         Require(!ui.CaptureScreen().Contains("first marker", StringComparison.Ordinal), "Update published implicitly.");
         Require(PioneerTrainingDisplay.Show(id), "Existing display failed to publish.");
         var composed = ui.CaptureScreen();
         ScreenContains("important marker", "scenario marker", "custom speed", "training marker", "first marker", "second marker");
+        RequireForeground(ui.CaptureCells(120, 40), "first marker", 0, new(StandardColor.BrightYellow));
         Require(composed.IndexOf("first marker", StringComparison.Ordinal) < composed.IndexOf("second marker", StringComparison.Ordinal), "Producers must compose in registration order.");
         Require(!composed.Contains("before scenario", StringComparison.Ordinal), "Same producer retained its replaced part.");
         Require(!PioneerTrainingDisplay.Show(id, cancellationToken: new CancellationToken(canceled: true)), "Canceled Show published.");
@@ -356,38 +358,6 @@ void TestHistory()
         Require(!PioneerTrainingDisplay.Show(new(1001, 9)), "Disabling history retained an older analysis after a same-key update.");
     }
     finally { plugin.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
-}
-
-void TestEventLogger()
-{
-    using var directory = new TempCurrentDirectory("Pioneer-EventLogger");
-    using var loggerContext = new RuntimePluginContext(ui.Application);
-    using var context = new RuntimePluginContext(ui.Application, new HashSet<string> { "EventLoggerPlugin" });
-    var logger = new EventLoggerPlugin.EventLoggerPlugin();
-    var plugin = new PioneerPlugin();
-    logger.Initialize(loggerContext);
-    plugin.Initialize(context);
-    try
-    {
-        Dispatch(context, "check_event", Fixtures.Response());
-        var stats = EventLoggerPlugin.EventLogger.Current.Turns[1]!;
-        Require(stats.FiveTrainStats[0]!.FiveValueGain.SequenceEqual([2, 2, 2, 2, 2]), "EventLogger received incorrect speed training totals.");
-        Require(stats.FiveTrainStats[4]!.PtGain == 10 && stats.FiveTrainStats[4]!.FailureRate == 20, "EventLogger received incorrect wisdom training statistics.");
-        var choice = EventLoggerPlugin.EventLogger.Current.NewTurnBuilder(1);
-        choice.playerChoice = 101;
-        EventLoggerPlugin.EventLogger.CommitScenarioTurn(11, 1, choice);
-        Dispatch(context, "gain_skills", Fixtures.Response());
-        Require(EventLoggerPlugin.EventLogger.Current.Turns[1]!.PlayerChoice == 101, "Repeated response erased the recorded choice.");
-        Dispatch(context, "check_event", Fixtures.Response(turn: 2));
-        Require(EventLoggerPlugin.EventLogger.Current.Turns[2]!.TrainLevelCount[0] == 1, "EventLogger lost the preceding training count.");
-        Dispatch(context, "check_event", Fixtures.Response(turn: 2, charaId: 2002));
-        Require(EventLoggerPlugin.EventLogger.Current.Turns[1] is null, "A new training session retained the old session's turns.");
-    }
-    finally
-    {
-        plugin.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        logger.DisposeAsync().AsTask().GetAwaiter().GetResult();
-    }
 }
 
 static void Dispatch(RuntimePluginContext context, string endpointName, object response)

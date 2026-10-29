@@ -1,3 +1,0 @@
-[submodule "EventLoggerPlugin"]
-	path = deps/EventLoggerPlugin
-	url = https://github.com/URA-Plugins/EventLoggerPlugin.git

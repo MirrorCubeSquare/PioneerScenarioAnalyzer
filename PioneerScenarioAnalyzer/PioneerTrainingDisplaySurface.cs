@@ -256,6 +256,14 @@ public sealed class PioneerDisplayRowsEditor
         ArgumentNullException.ThrowIfNull(text);
         rows.Add(text);
     }
+
+    public void AddStyled(params PioneerDisplaySegment[] segments)
+    {
+        ArgumentNullException.ThrowIfNull(segments);
+        if (segments.Any(segment => segment.Text is null))
+            throw new ArgumentException("显示片段文本不能为 null。", nameof(segments));
+        rows.Add(PioneerDisplayLine.Styled([.. segments]));
+    }
 }
 
 internal sealed class PioneerTrainingDisplayBuilder
@@ -304,12 +312,12 @@ internal sealed class PioneerTrainingCard(int commandId, int trainIndex, string 
     public PioneerDisplayRows Rows { get; } = new();
 }
 
-internal enum PioneerDisplayColor
+public enum PioneerDisplayColor
 {
     Normal, Cyan, Green, Yellow, Red, DarkOrange, Aqua, Lime, LightGreen, Teal
 }
 
-internal readonly record struct PioneerDisplaySegment(string Text, PioneerDisplayColor Color = PioneerDisplayColor.Normal);
+public readonly record struct PioneerDisplaySegment(string Text, PioneerDisplayColor Color = PioneerDisplayColor.Normal);
 
 internal sealed record PioneerDisplayLine(IReadOnlyList<PioneerDisplaySegment> Segments, bool IsRule = false)
 {

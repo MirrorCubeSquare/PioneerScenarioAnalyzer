@@ -15,7 +15,6 @@ public sealed class PioneerScenarioAnalyzer : IPlugin
     readonly PioneerDisplayHistory history = new(WorkspaceTitle, TrainingPanelKey, "训练分析");
     IPluginContext? pluginContext;
     Workspace? workspace;
-    int? currentCharaId;
 
     public void Initialize(IPluginContext context)
     {
@@ -29,7 +28,6 @@ public sealed class PioneerScenarioAnalyzer : IPlugin
                 key => PioneerTrainingDisplay.Show(new(key.SingleModeCharaId, key.Turn)),
                 key => PioneerTrainingDisplay.Remove(this, new(key.SingleModeCharaId, key.Turn)));
             pluginContext = context;
-            currentCharaId = null;
         }
 
         context.Analyzers.Register<SingleModePioneerCheckEventResponse>(
@@ -49,7 +47,6 @@ public sealed class PioneerScenarioAnalyzer : IPlugin
         lock (gate)
         {
             pluginContext = null;
-            currentCharaId = null;
             history.Stop();
             PioneerTrainingDisplay.Clear(this);
             workspace?.RemovePanel(TrainingPanelKey);
@@ -105,9 +102,6 @@ public sealed class PioneerScenarioAnalyzer : IPlugin
             var turn = new TurnInfoPioneer(SingleModeTurnData.From(data));
             var stats = Handler.CreateTrainingStats(turn);
             var builder = Handler.CreateDisplay(turn, stats);
-            if (pluginContext.IsPluginAvailable("EventLoggerPlugin"))
-                PioneerEventLoggerBridge.Apply(data, stats, builder, currentCharaId != chara.single_mode_chara_id);
-            currentCharaId = chara.single_mode_chara_id;
 
             var target = workspace ??= Workspace.Create(WorkspaceTitle);
             var id = new PioneerTrainingDisplayId(chara.single_mode_chara_id, chara.turn);

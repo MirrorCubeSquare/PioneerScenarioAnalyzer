@@ -12,7 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="$(UraTestHostRoot)\UmamusumeResponseAnalyzer\UmamusumeResponseAnalyzer.csproj" />
     <ProjectReference Include="..\..\PioneerScenarioAnalyzer\PioneerScenarioAnalyzer.csproj" AdditionalProperties="GenerateUraPluginManifestOnBuild=false;PackageUraPluginOnBuild=false;DeployUraPluginToLocalAppDataOnBuild=false" />
-    <ProjectReference Include="..\..\deps\EventLoggerPlugin\EventLoggerPlugin.csproj" AdditionalProperties="GenerateUraPluginManifestOnBuild=false;PackageUraPluginOnBuild=false;DeployUraPluginToLocalAppDataOnBuild=false" />
     <Compile Include="$(UraTestHostRoot)\eng\PluginTesting\SmokeHost.cs" Link="SmokeHost.cs" />
   </ItemGroup>
 </Project>
