@@ -5,7 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>2026.9.26</Version>
+    <Version>2026.10.30</Version>
 
     <!-- URA 插件元数据：供发布 manifest 使用 -->
     <PluginInternalName>PioneerScenarioAnalyzer</PluginInternalName>
