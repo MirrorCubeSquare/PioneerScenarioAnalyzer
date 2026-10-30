@@ -17,6 +17,8 @@ using UmamusumeResponseAnalyzer.TerminalGui;
 using PioneerPlugin = PioneerScenarioAnalyzer.PioneerScenarioAnalyzer;
 using TColor = Terminal.Gui.Drawing.Color;
 
+RepositoryChecks.Run();
+
 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("zh-CN");
 CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-CN");
 var capturePath = args.Length == 2 && args[0] == "--capture" ? Path.GetFullPath(args[1]) : null;
@@ -29,6 +31,8 @@ Run("command IDs, summer training and island totals", TestTraining);
 Run("original dashboard layout, colors and scrolling", TestOriginalDashboard);
 Run("display producer composition", TestProducers);
 Run("keyed history and configuration", TestHistory);
+ScenarioMigrationSmoke.Run(ui);
+ui.InvokeOnOwner(() => { HistoryConfigSmoke.Run(ui.Application); return true; });
 Console.WriteLine("PioneerScenarioAnalyzer smoke passed (6 phases).");
 
 void Run(string name, Action test)

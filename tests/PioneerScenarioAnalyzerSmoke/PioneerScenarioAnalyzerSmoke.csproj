@@ -10,8 +10,8 @@
     <DeployUraPluginToLocalAppDataOnBuild>false</DeployUraPluginToLocalAppDataOnBuild>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\Support\*.cs" />
     <ProjectReference Include="$(UraTestHostRoot)\UmamusumeResponseAnalyzer\UmamusumeResponseAnalyzer.csproj" />
     <ProjectReference Include="..\..\PioneerScenarioAnalyzer\PioneerScenarioAnalyzer.csproj" AdditionalProperties="GenerateUraPluginManifestOnBuild=false;PackageUraPluginOnBuild=false;DeployUraPluginToLocalAppDataOnBuild=false" />
-    <Compile Include="$(UraTestHostRoot)\eng\PluginTesting\SmokeHost.cs" Link="SmokeHost.cs" />
   </ItemGroup>
 </Project>
